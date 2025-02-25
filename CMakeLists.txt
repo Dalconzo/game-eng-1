@@ -39,18 +39,38 @@ else()
         FetchContent_MakeAvailable(glew)
     endif()
 endif()
-
 # Engine library
 add_library(engine
     src/core/engine.cpp
     src/rendering/window.cpp
     src/core/time_manager.cpp
     src/core/game_loop.cpp
+    src/rendering/shader.cpp
+    src/rendering/mesh.cpp
+    src/rendering/primitive_builder.cpp
+    src/core/resource_manager.cpp
 )
-
 target_include_directories(engine 
     PUBLIC 
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+# Find or fetch GLM for math operations
+find_package(glm QUIET)
+if(NOT glm_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+        glm
+        GIT_REPOSITORY https://github.com/g-truc/glm.git
+        GIT_TAG 0.9.9.8
+    )
+    FetchContent_MakeAvailable(glm)
+endif()
+
+# Update engine target - GLM is header-only so we include it, not link it
+target_include_directories(engine
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${GLM_INCLUDE_DIRS}
 )
 
 target_link_libraries(engine
@@ -59,7 +79,6 @@ target_link_libraries(engine
         OpenGL::GL
         GLEW::GLEW
 )
-
 # Main executable
 add_executable(game_app src/main.cpp)
 target_link_libraries(game_app PRIVATE engine)
