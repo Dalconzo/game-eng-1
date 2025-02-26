@@ -1,26 +1,47 @@
 #pragma once
+
 #include <string>
+#include <unordered_map>
+#include <memory>
 #include <filesystem>
+#include "rendering/texture.h"
 
 namespace engine {
 namespace core {
 
 class ResourceManager {
 public:
-    // Initialize with automatic project root detection
-    static void init();
+    // Initialize the resource manager
+    static void init(const std::string& customRootPath = "");
     
-    // Initialize with explicit project root path
-    // static void init(const std::string& projectRoot);
+    // Get the root directory of the application
+    static std::filesystem::path getRootPath();
     
-    // Resolve a relative path to an absolute path
-    static std::string resolvePath(const std::string& relativePath);
+    // Resolve a path relative to the content directory
+    static std::filesystem::path resolvePath(const std::string& relativePath);
+    
+    // Check if a file exists
+    static bool fileExists(const std::filesystem::path& path);
+    
+    // Texture resources
+    static std::shared_ptr<rendering::Texture> getTexture(const std::string& relativePath);
+    static void unloadTexture(const std::string& relativePath);
+    
+    // Resource management
+    static void clearAllResources();
     
 private:
-    static std::string s_projectRoot;
+    // Private constructor - this is a singleton
+    ResourceManager() = default;
     
-    // Attempts to find the project root by looking for common project markers
-    static std::string findProjectRoot();
+    // Try to detect the root directory automatically
+    static std::filesystem::path detectRootDirectory();
+    
+    static std::filesystem::path s_rootPath;
+    static bool s_initialized;
+    
+    // Resource caches
+    static std::unordered_map<std::string, std::shared_ptr<rendering::Texture>> s_textureCache;
 };
 
 } // namespace core

@@ -42,12 +42,13 @@ endif()
 # Engine library
 add_library(engine
     src/core/engine.cpp
-    src/rendering/window.cpp
     src/core/time_manager.cpp
     src/core/game_loop.cpp
+    src/rendering/window.cpp
     src/rendering/shader.cpp
     src/rendering/mesh.cpp
     src/rendering/primitive_builder.cpp
+    src/rendering/texture.cpp
     src/core/resource_manager.cpp
 )
 target_include_directories(engine 
@@ -70,6 +71,7 @@ endif()
 target_include_directories(engine
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/build/external
         ${GLM_INCLUDE_DIRS}
 )
 
