@@ -49,11 +49,17 @@ add_library(engine
     src/rendering/mesh.cpp
     src/rendering/primitive_builder.cpp
     src/rendering/texture.cpp
-    src/rendering/camera.cpp
-    src/rendering/fps_camera.cpp
-    src/rendering/third_person_camera.cpp
-    src/rendering/camera_controller.cpp
+    src/rendering/model/model.cpp
+    src/rendering/model/material.cpp
+    src/camera/camera.cpp
+    src/camera/fps_camera.cpp
+    src/camera/third_person_camera.cpp
+    src/camera/camera_controller.cpp
     src/core/resource_manager.cpp
+    src/core/resources/texture_manager.cpp
+    src/core/resources/model_manager.cpp
+    src/core/resources/shader_manager.cpp
+    src/core/resources/material_manager.cpp
 )
 target_include_directories(engine 
     PUBLIC 
@@ -95,3 +101,35 @@ set(CMAKE_TOOLCHAIN_FILE ~/development/tools/vcpkg/scripts/buildsystems/vcpkg.cm
 if(APPLE)
     add_definitions(-DGL_SILENCE_DEPRECATION)
 endif()
+# Enable testing
+enable_testing()
+
+include(FetchContent)
+FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG v3.4.0  # Or another stable v3 release
+)
+FetchContent_MakeAvailable(Catch2)
+
+# Create test executable
+add_executable(engine_tests
+    tests/test_main.cpp
+    tests/core/texture_manager_tests.cpp
+    tests/core/resource_dependencies_tests.cpp 
+    tests/rendering/model_loading_test.cpp
+    tests/core/resource_manager_stress_test.cpp
+)
+
+# Include directories
+target_include_directories(engine_tests PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/external
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# Link with your engine library and Catch2
+target_link_libraries(engine_tests PRIVATE engine Catch2::Catch2WithMain)
+
+# Register tests with CTest
+add_test(NAME EngineTests COMMAND engine_tests)

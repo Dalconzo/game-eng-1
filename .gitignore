@@ -43,3 +43,5 @@ assets/large_assets/
 
 # External dependencies managed by vcpkg
 extern/vcpkg_installed/
+
+tests/
