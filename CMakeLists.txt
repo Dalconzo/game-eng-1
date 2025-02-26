@@ -49,6 +49,10 @@ add_library(engine
     src/rendering/mesh.cpp
     src/rendering/primitive_builder.cpp
     src/rendering/texture.cpp
+    src/rendering/camera.cpp
+    src/rendering/fps_camera.cpp
+    src/rendering/third_person_camera.cpp
+    src/rendering/camera_controller.cpp
     src/core/resource_manager.cpp
 )
 target_include_directories(engine 
