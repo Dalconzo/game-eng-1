@@ -1,4 +1,4 @@
-#include "include/ecs/System.h"
+#include "ecs/System.h"
 #include <algorithm>
 
 namespace Engine {

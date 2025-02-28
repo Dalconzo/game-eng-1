@@ -1,7 +1,7 @@
-#include "include/ecs/Entity.h"
-#include "include/ecs/components/TransformComponent.h"
-#include "include/ecs/Component.h"
-#include "include/ecs/ECSManager.h"
+#include "ecs/Entity.h"
+#include "ecs/components/TransformComponent.h"
+#include "ecs/Component.h"
+#include "ecs/ECSManager.h"
 
 namespace Engine {
 namespace ECS {
@@ -28,13 +28,7 @@ void Entity::setParent(Entity* newParent) {
     }
 }
 
-Entity* Entity::getParent() const {
-    return parent;
-}
 
-const std::vector<Entity*>& Entity::getChildren() const {
-    return children;
-}
 
 // Most Entity methods are templated and defined in the header,
 // but we can implement any non-templated methods here

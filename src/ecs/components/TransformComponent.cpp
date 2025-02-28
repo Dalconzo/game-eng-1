@@ -1,5 +1,5 @@
-#include "include/ecs/components/TransformComponent.h"
-#include "include/ecs/Entity.h"
+#include "ecs/components/TransformComponent.h"
+#include "ecs/Entity.h"
 
 namespace Engine {
 namespace ECS {

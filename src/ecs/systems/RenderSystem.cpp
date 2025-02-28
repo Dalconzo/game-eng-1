@@ -1,6 +1,8 @@
-#include "include/ecs/systems/RenderSystem.h"
-#include "include/ecs/components/TransformComponent.h"
+#include "ecs/systems/RenderSystem.h"
+#include "ecs/components/TransformComponent.h"
+#include "ecs/ECSManager.h"
 #include <iostream> // For debug output during prototype
+#include "ecs/Entity.h"
 
 namespace Engine {
 namespace ECS {
@@ -59,5 +61,16 @@ void RenderSystem::renderEntity(Entity* entity, const Math::Matrix4x4& worldMatr
     // 4. Issue draw call (glDrawElements or equivalent)
 }
 
+Entity* RenderSystem::findMainCamera() {
+    if (!m_ecsManager) return nullptr;
+    
+    // Now we can safely use getAllEntities
+    for (auto& entity : m_ecsManager->getAllEntities()) {
+        // Rest of the method as before
+    }
+}
+
 } // namespace ECS
 } // namespace Engine
+
+

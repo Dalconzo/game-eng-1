@@ -3,6 +3,10 @@
 #include <bitset>
 #include <array>
 #include <unordered_map>
+#include <vector>
+#include <algorithm>
+#include <stdexcept>
+#include <memory>
 
 namespace Engine {
 namespace ECS {
@@ -28,6 +32,14 @@ using EntityID = std::uint32_t;
 inline ComponentID getNewComponentID() {
     static ComponentID lastID = 0;
     return lastID++;
+}
+
+// Template function to get component ID for a specific type
+template <typename T>
+inline ComponentID getComponentID() {
+    static_assert(std::is_base_of<Component, T>::value, "T must derive from Component");
+    static ComponentID typeID = getNewComponentID();
+    return typeID;
 }
 
 // Entity class
@@ -56,15 +68,15 @@ public:
         return componentMask[getComponentID<T>()];
     }
     
-    // Add component to entity
+    // Add component to entity - declaration only
     template <typename T, typename... Args>
     T& addComponent(Args&&... args);
     
-    // Get component from entity
+    // Get component from entity - declaration only
     template <typename T>
     T& getComponent();
     
-    // Remove component from entity
+    // Remove component from entity - declaration only
     template <typename T>
     void removeComponent();
     
@@ -93,59 +105,7 @@ public:
     }
 };
 
-// Template function to get component ID for a specific type
-template <typename T>
-inline ComponentID getComponentID() {
-    static_assert(std::is_base_of<Component, T>::value, "T must derive from Component");
-    static ComponentID typeID = getNewComponentID();
-    return typeID;
-}
-
-template <typename T>
-T& Entity::getComponent() {
-    static_assert(std::is_base_of<Component, T>::value, "T must derive from Component");
-    
-    ComponentID id = getComponentID<T>();
-    
-    if (!hasComponent<T>()) {
-        throw std::runtime_error("Entity does not have requested component");
-    }
-    
-    // We need to access the component through the manager
-    auto& componentArray = manager->components[id];
-    if (componentArray.size() <= this->id || !componentArray[this->id]) {
-        throw std::runtime_error("Component exists in mask but not in storage");
-    }
-    
-    return *static_cast<T*>(componentArray[this->id].get());
-}
-
-template <typename T>
-void Entity::removeComponent() {
-    static_assert(std::is_base_of<Component, T>::value, "T must derive from Component");
-    
-    ComponentID id = getComponentID<T>();
-    
-    if (!hasComponent<T>()) {
-        return; // No component to remove
-    }
-    
-    // Remove component from storage
-    if (manager->components[id].size() > this->id) {
-        manager->components[id][this->id].reset();
-    }
-    
-    // Update component mask
-    componentMask.reset(id);
-    
-    // Update systems (remove entity from systems that no longer match)
-    for (auto& system : manager->systems) {
-        if (!system->isInterested(this) && 
-            std::find(system->getEntities().begin(), system->getEntities().end(), this) != system->getEntities().end()) {
-            system->removeEntity(this);
-        }
-    }
-}
-
 } // namespace ECS
 } // namespace Engine
+
+// Note: Template implementations moved to ECSManager.h to break circular dependency

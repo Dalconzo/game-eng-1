@@ -1,4 +1,4 @@
-#include "include/ecs/Component.h"
+#include "ecs/Component.h"
 
 namespace Engine {
 namespace ECS {

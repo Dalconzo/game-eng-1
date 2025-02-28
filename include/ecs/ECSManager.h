@@ -6,11 +6,30 @@
 #include <vector>
 #include <array>
 #include <unordered_map>
+#include <string>
+#include <chrono>
+
+// Forward declarations for external classes
+namespace engine {
+    namespace rendering {
+        class Window;
+        class Texture;
+        class Model;
+        class Shader;
+        class Material;
+    }
+    namespace core {
+        class ResourceManager;
+    }
+}
 
 namespace Engine {
 namespace ECS {
 
+
 class ECSManager {
+    friend class Entity;
+    
 private:
     // Entity management
     std::array<std::unique_ptr<Entity>, MAX_ENTITIES> entities;
@@ -23,44 +42,19 @@ private:
     // System management
     std::vector<std::unique_ptr<System>> systems;
 
+    static ::engine::rendering::Window* window;
+
 public:
-    ECSManager() {
-        // Initialize free entity IDs
-        for (EntityID i = 0; i < MAX_ENTITIES; i++) {
-            freeEntities.push_back(i);
-        }
-    }
+    ECSManager();
     
     // Create a new entity
-    Entity* createEntity() {
-        if (freeEntities.empty()) {
-            throw std::runtime_error("Maximum number of entities reached");
-        }
-        
-        EntityID id = freeEntities.back();
-        freeEntities.pop_back();
-        livingEntityCount++;
-        
-        entities[id] = std::make_unique<Entity>(id, this);
-        return entities[id].get();
-    }
+    Entity* createEntity();
     
     // Destroy an entity
-    void destroyEntity(EntityID id) {
-        if (id >= MAX_ENTITIES || !entities[id]) {
-            return;
-        }
-        
-        entities[id]->destroy();
-    }
+    void destroyEntity(EntityID id);
     
     // Get entity by ID
-    Entity* getEntity(EntityID id) {
-        if (id >= MAX_ENTITIES) {
-            return nullptr;
-        }
-        return entities[id].get();
-    }
+    Entity* getEntity(EntityID id);
     
     // Component management methods
     template <typename T, typename... Args>
@@ -96,7 +90,7 @@ public:
     T* registerSystem() {
         // Create system
         auto system = std::make_unique<T>();
-        system->setComponentMask<ComponentTypes...>();
+        system->template setComponentMask<ComponentTypes...>();
         system->init();
         
         // Find entities that match system requirements
@@ -112,52 +106,81 @@ public:
     }
     
     // Update all systems
-    void update(float deltaTime) {
-        for (auto& system : systems) {
-            if (system->isActive()) {
-                system->update(deltaTime);
-            }
-        }
-    }
+    void update(float deltaTime);
     
     // Render all systems
-    void render() {
-        for (auto& system : systems) {
-            if (system->isActive()) {
-                system->render();
-            }
-        }
-    }
+    void render();
     
     // Clean up destroyed entities
-    void refresh() {
-        for (std::size_t i = 0; i < MAX_ENTITIES; i++) {
-            if (entities[i] && !entities[i]->isActive()) {
-                // Remove entity from all systems
-                for (auto& system : systems) {
-                    system->removeEntity(entities[i].get());
-                }
-                
-                // Reset components
-                for (std::size_t j = 0; j < MAX_COMPONENTS; j++) {
-                    if (components[j].size() > i && components[j][i]) {
-                        components[j][i].reset();
-                    }
-                }
-                
-                // Free entity ID
-                entities[i].reset();
-                freeEntities.push_back(static_cast<EntityID>(i));
-                livingEntityCount--;
-            }
-        }
-    }
+    void refresh();
+    
+    void initialize(engine::rendering::Window* gameWindow);
+    void runGameLoop();
+    void processInput(float deltaTime);
+    void shutdown();
+    
+    // Resource loading helpers
+    static std::shared_ptr<engine::rendering::Texture> loadTexture(const std::string& path);
+    static std::shared_ptr<engine::rendering::Model> loadModel(const std::string& path);
+    static std::shared_ptr<engine::rendering::Shader> loadShader(
+        const std::string& name,
+        const std::string& vertexPath,
+        const std::string& fragmentPath);
+    static std::shared_ptr<engine::rendering::Material> createMaterial(const std::string& name);
+
+    std::vector<Entity*> getAllEntities() const;
 };
 
-// Implement addComponent function from Entity class
+// Implementation of Entity template methods - now that ECSManager is fully defined
 template <typename T, typename... Args>
 T& Entity::addComponent(Args&&... args) {
     return manager->addComponent<T>(this, std::forward<Args>(args)...);
+}
+
+template <typename T>
+T& Entity::getComponent() {
+    static_assert(std::is_base_of<Component, T>::value, "T must derive from Component");
+    
+    ComponentID id = getComponentID<T>();
+    
+    if (!hasComponent<T>()) {
+        throw std::runtime_error("Entity does not have requested component");
+    }
+    
+    // We need to access the component through the manager
+    auto& componentArray = manager->components[id];
+    if (componentArray.size() <= this->id || !componentArray[this->id]) {
+        throw std::runtime_error("Component exists in mask but not in storage");
+    }
+    
+    return *static_cast<T*>(componentArray[this->id].get());
+}
+
+template <typename T>
+void Entity::removeComponent() {
+    static_assert(std::is_base_of<Component, T>::value, "T must derive from Component");
+    
+    ComponentID id = getComponentID<T>();
+    
+    if (!hasComponent<T>()) {
+        return; // No component to remove
+    }
+    
+    // Remove component from storage
+    if (manager->components[id].size() > this->id) {
+        manager->components[id][this->id].reset();
+    }
+    
+    // Update component mask
+    componentMask.reset(id);
+    
+    // Update systems (remove entity from systems that no longer match)
+    for (auto& system : manager->systems) {
+        if (!system->isInterested(this) && 
+            std::find(system->getEntities().begin(), system->getEntities().end(), this) != system->getEntities().end()) {
+            system->removeEntity(this);
+        }
+    }
 }
 
 } // namespace ECS
