@@ -1,6 +1,7 @@
 #pragma once
 #include "Entity.h"
 #include <vector>
+#include <iostream>
 
 namespace Engine {
 namespace ECS {
@@ -14,11 +15,19 @@ private:
 
 public:
     virtual ~System() = default;
+
+    virtual void setManagerInternal(ECSManager* manager) {}
     
     // Virtual functions for system lifecycle
-    virtual void init() {}
-    virtual void update(float deltaTime) {}
-    virtual void render() {}
+    virtual void init() {
+        std::cout << "System: Base init" << std::endl;
+    }
+    virtual void update(float deltaTime) {
+        std::cout << "System: Base update with deltaTime " << deltaTime << std::endl;
+    }
+    virtual void render() {
+        std::cout << "System: Base render" << std::endl;
+    }
     
     bool isActive() const { return active; }
     void setActive(bool state) { active = state; }

@@ -26,10 +26,14 @@ namespace engine {
 namespace Engine {
 namespace ECS {
 
+class System;
+class Entity;
+class Component;
+class RenderSystem;
 
 class ECSManager {
     friend class Entity;
-    
+
 private:
     // Entity management
     std::array<std::unique_ptr<Entity>, MAX_ENTITIES> entities;
@@ -90,6 +94,8 @@ public:
     T* registerSystem() {
         // Create system
         auto system = std::make_unique<T>();
+        // Important: Set the manager reference right after creation
+        system->setManagerInternal(this);
         system->template setComponentMask<ComponentTypes...>();
         system->init();
         

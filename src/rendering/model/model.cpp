@@ -42,7 +42,10 @@ bool Model::loadFromFile(const std::string& filePath) {
 }
 
 void Model::render(Shader& shader) {
+    std::cout << "Model::render - Meshes count: " << m_meshes.size() << std::endl;
+    
     for (size_t i = 0; i < m_meshes.size(); i++) {
+        std::cout << "Rendering mesh " << i << std::endl;
         // Apply material if available
         if (i < m_materials.size() && m_materials[i]) {
             m_materials[i]->apply(shader);

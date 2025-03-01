@@ -2,6 +2,7 @@
 #include "core/resource_manager.h"
 #include "rendering/window.h"
 #include <GLFW/glfw3.h>
+#include <iostream>
 
 namespace Engine {
 namespace ECS {
@@ -44,19 +45,23 @@ Entity* ECSManager::getEntity(EntityID id) {
 }
 
 void ECSManager::update(float deltaTime) {
+    std::cout << "ECSManager: update starting" << std::endl;
     for (auto& system : systems) {
         if (system->isActive()) {
             system->update(deltaTime);
         }
     }
+    std::cout << "ECSManager: update completed" << std::endl;
 }
 
 void ECSManager::render() {
+    std::cout << "ECSManager: render starting" << std::endl;
     for (auto& system : systems) {
         if (system->isActive()) {
             system->render();
         }
     }
+    std::cout << "ECSManager: render completed" << std::endl;
 }
 
 void ECSManager::refresh() {
@@ -103,16 +108,22 @@ void ECSManager::runGameLoop() {
     
     // Main game loop
     while (!window->shouldClose()) {
+        std::cout << "Starting game loop" << std::endl;
         // Calculate delta time
         auto currentTime = std::chrono::high_resolution_clock::now();
         float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
         lastTime = currentTime;
+        std::cout << "Processing input" << std::endl;
         
         // Process input
         processInput(deltaTime);
+
+        std::cout << "Updating systems" << std::endl;
         
         // Update all active systems
         update(deltaTime);
+
+        std::cout << "Rendering frame" << std::endl;
         
         // Render frame
         render();

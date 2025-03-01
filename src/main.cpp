@@ -6,6 +6,7 @@
 #include "ecs/components/CameraComponent.h"
 #include "ecs/systems/RenderSystem.h"
 #include "core/resource_manager.h"
+#include "rendering/primitive_builder.h"
 #include <iostream>
 #include <memory>
 
@@ -47,6 +48,7 @@ void createScene(ECSManager& manager) {
 
 int main() {
     try {
+        engine::core::ResourceManager::init("assets");
         // Create a window
         auto window = std::make_unique<engine::rendering::Window>(800, 600, "ECS Game Engine");
         

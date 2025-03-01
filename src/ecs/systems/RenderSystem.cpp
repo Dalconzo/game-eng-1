@@ -62,12 +62,15 @@ void RenderSystem::renderEntity(Entity* entity, const Math::Matrix4x4& worldMatr
 }
 
 Entity* RenderSystem::findMainCamera() {
-    if (!m_ecsManager) return nullptr;
+    // Verify manager exists before using
+    if (!m_ecsManager) {
+        std::cout << "Error: ECSManager is null" << std::endl;
+        return nullptr;
+    }
     
     // Now we can safely use getAllEntities
-    for (auto& entity : m_ecsManager->getAllEntities()) {
-        // Rest of the method as before
-    }
+    auto entities = m_ecsManager->getAllEntities();
+    std::cout << "Got " << entities.size() << " entities" << std::endl;
 }
 
 } // namespace ECS

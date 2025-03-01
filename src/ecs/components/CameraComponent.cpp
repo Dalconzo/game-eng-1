@@ -2,6 +2,7 @@
 #include "ecs/components/TransformComponent.h"
 #include "ecs/Entity.h"
 #include <GL/glew.h>
+#include <iostream>
 
 namespace Engine {
 namespace ECS {
@@ -52,12 +53,17 @@ const Math::Matrix4x4& CameraComponent::getProjectionMatrix() const {
 }
 
 const Math::Matrix4x4& CameraComponent::getViewMatrix() const {
+    std::cout << "Getting camera view matrix" << std::endl;
+
     if (m_viewDirty) {
+        std::cout << "Camera view matrix is dirty, recalculating" << std::endl;
+        
         if (getOwner()->hasComponent<TransformComponent>()) {
             const auto& transform = getOwner()->getComponent<TransformComponent>();
             
             // Get the world matrix of the camera
             Math::Matrix4x4 worldMatrix = transform.getWorldMatrix();
+            std::cout << "Got camera world matrix" << std::endl;
             
             // The view matrix is the inverse of the camera's world matrix
             // For a simple implementation, we can use the fact that:
@@ -95,7 +101,10 @@ const Math::Matrix4x4& CameraComponent::getViewMatrix() const {
             m_viewMatrix(1, 3) = translationInverse.y;
             m_viewMatrix(2, 3) = translationInverse.z;
             
+            std::cout << "View matrix recalculation complete" << std::endl;
             m_viewDirty = false;
+        } else {
+            std::cout << "ERROR: Camera entity missing TransformComponent" << std::endl;
         }
     }
     
