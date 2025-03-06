@@ -12,11 +12,14 @@ private:
     ComponentMask componentMask;
     std::vector<Entity*> entities;
     bool active = true;
+    ECSManager* m_manager = nullptr;
 
 public:
     virtual ~System() = default;
 
-    virtual void setManagerInternal(ECSManager* manager) {}
+    virtual void setManagerInternal(ECSManager* manager) {
+        m_manager = manager;
+    }
     
     // Virtual functions for system lifecycle
     virtual void init() {

@@ -2,6 +2,7 @@
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+#include "rendering/debug/gl_debug.h"
 
 namespace engine {
 namespace rendering {
@@ -144,14 +145,10 @@ glm::mat4 Mesh::getModelMatrix() const {
 }
 
 void Mesh::render(Shader& shader) {
-    // Apply transformation
-    shader.setMat4("model", getModelMatrix());
-    
-    // Bind VAO and draw elements
+    // Just bind VAO and draw elements
     glBindVertexArray(m_VAO);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
-
 } // namespace rendering
 } // namespace engine

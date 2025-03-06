@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
+#include "rendering/debug/gl_debug.h"
 
 namespace engine {
 namespace rendering {
@@ -88,6 +89,8 @@ bool Shader::compileShader(unsigned int& shader, const std::string& source, unsi
     const char* sourceCode = source.c_str();
     glShaderSource(shader, 1, &sourceCode, NULL);
     glCompileShader(shader);
+
+    engine::rendering::debug::validateShaderCompilation(shader);
     
     // Check for compilation errors
     int success;
@@ -105,6 +108,8 @@ bool Shader::linkProgram(unsigned int vertexShader, unsigned int fragmentShader)
     glAttachShader(m_programID, vertexShader);
     glAttachShader(m_programID, fragmentShader);
     glLinkProgram(m_programID);
+
+    engine::rendering::debug::validateProgramLinking(m_programID);
     
     // Check for linking errors
     int success;
@@ -119,6 +124,7 @@ bool Shader::linkProgram(unsigned int vertexShader, unsigned int fragmentShader)
 
 void Shader::use() {
     glUseProgram(m_programID);
+    std::cout << "Binding shader program ID: " << m_programID << std::endl;
 }
 
 int Shader::getUniformLocation(const std::string& name) {
@@ -172,7 +178,21 @@ void Shader::setMat3(const std::string& name, const glm::mat3& value) {
 }
 
 void Shader::setMat4(const std::string& name, const glm::mat4& value) {
-    glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+    unsigned int location = glGetUniformLocation(m_programID, name.c_str());
+    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
+    
+    std::cout << "Set uniform '" << name << "' at location " << location << std::endl;
+    
+    // Print full matrix representation
+    std::cout << "  Matrix values: [" << std::endl;
+    for (int row = 0; row < 4; row++) {
+        std::cout << "    ";
+        for (int col = 0; col < 4; col++) {
+            std::cout << value[col][row] << " ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "  ]" << std::endl;
 }
 
 void Shader::logShaderError(unsigned int shader) {

@@ -54,6 +54,8 @@ private:
 
 public:
     Entity(EntityID id, ECSManager* manager) : id(id), manager(manager) {}
+
+    ECSManager* getManager() const { return manager; }
     
     EntityID getID() const { return id; }
     

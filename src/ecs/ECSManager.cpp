@@ -1,6 +1,7 @@
 #include "ecs/ECSManager.h"
 #include "core/resource_manager.h"
 #include "rendering/window.h"
+#include "ecs/components/CameraControllerComponent.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
 
@@ -21,8 +22,8 @@ Entity* ECSManager::createEntity() {
         throw std::runtime_error("Maximum number of entities reached");
     }
     
-    EntityID id = freeEntities.back();
-    freeEntities.pop_back();
+    EntityID id = freeEntities.front();
+    freeEntities.erase(freeEntities.begin());
     livingEntityCount++;
     
     entities[id] = std::make_unique<Entity>(id, this);
@@ -56,6 +57,9 @@ void ECSManager::update(float deltaTime) {
 
 void ECSManager::render() {
     std::cout << "ECSManager: render starting" << std::endl;
+    int width = window->getWidth();
+    int height = window->getHeight();
+    glViewport(0, 0, width, height);
     for (auto& system : systems) {
         if (system->isActive()) {
             system->render();
@@ -105,8 +109,10 @@ void ECSManager::runGameLoop() {
     }
     
     auto lastTime = std::chrono::high_resolution_clock::now();
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     
-    // Main game loop
+    // Main game loop / render loop
     while (!window->shouldClose()) {
         std::cout << "Starting game loop" << std::endl;
         // Calculate delta time
@@ -134,20 +140,23 @@ void ECSManager::runGameLoop() {
         // Swap buffers and poll events
         window->swapBuffers();
         window->pollEvents();
+        // window->close();
     }
 }
 
 void ECSManager::processInput(float deltaTime) {
-    // Since we don't have direct access to the GLFW window pointer,
-    // we should implement an input system that works with our Window class
+    if (!window) {
+        return;
+    }
     
-    // For a proper implementation, we would:
-    // 1. Add input state methods to the Window class
-    // 2. Or create a separate InputManager class that interfaces with Window
-    // 3. Or have Window dispatch input events that systems can subscribe to
-    
-    // For now, we can keep this as a placeholder for custom input processing
-    // Systems can implement their own input handling until we build a proper input system
+    // Process camera controller input for all camera controller entities
+    for (auto entity : getAllEntities()) {
+        if (entity && entity->isActive() && 
+            entity->hasComponent<CameraControllerComponent>()) {
+            auto& controller = entity->getComponent<CameraControllerComponent>();
+            controller.handleInput(window);
+        }
+    }
 }
 
 void ECSManager::shutdown() {
@@ -202,11 +211,12 @@ std::vector<Entity*> ECSManager::getAllEntities() const {
     std::vector<Entity*> result;
     for (std::size_t i = 0; i < MAX_ENTITIES; i++) {
         if (entities[i]) {
+            std::cout << "Found valid entity ID: " << i << std::endl;
             result.push_back(entities[i].get());
         }
     }
+    std::cout << "getAllEntities found " << result.size() << " entities" << std::endl;
     return result;
 }
-
 } // namespace ECS
 } // namespace Engine

@@ -3,6 +3,8 @@
 #include "../math/Vector.h"
 #include "../math/Quaternion.h"
 #include "../math/Matrix4x4.h"
+#include "../components/CameraComponent.h"
+#include <iostream>
 
 namespace Engine {
 namespace ECS {
@@ -32,6 +34,12 @@ public:
           scale(scale),
           worldMatrixDirty(true) {
     }
+
+    // Add this method to the TransformComponent class, alongside the other getters/setters
+    const Math::Vector3& getPosition() const {
+        return position;
+    }
+
     
     // Mark the transform as dirty when any property changes
     void setPosition(const Math::Vector3& newPosition) {
@@ -127,3 +135,4 @@ public:
 
 } // namespace ECS
 } // namespace Engine
+

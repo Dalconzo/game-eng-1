@@ -39,6 +39,12 @@ struct Vector3 {
             x * v.y - y * v.x
         );
     }
+
+    // Add this to the Vector3 struct
+    float dot(const Vector3& other) const {
+        return x * other.x + y * other.y + z * other.z;
+    }
+
 };
 
 } // namespace Math

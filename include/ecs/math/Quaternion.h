@@ -31,7 +31,18 @@ public:
         
         return q;
     }
-    
+
+    Vector3 rotateVector(const Vector3& v) const {
+        // Optimized implementation of v' = q * v * q^(-1)
+        // This is the standard formula for rotating a vector by a quaternion
+        Vector3 qvec(x, y, z);
+        Vector3 uv = qvec.cross(v);
+        Vector3 uuv = qvec.cross(uv);
+        
+        // v + 2.0 * (q.w * uv + uuv)
+        return v + (uv * w + uuv) * 2.0f;
+    }
+
     // Utility functions
     Quaternion normalized() const {
         float mag = std::sqrt(x*x + y*y + z*z + w*w);
@@ -114,6 +125,7 @@ public:
         return q.normalized();
     }
 };
+
 
 } // namespace Math
 } // namespace Engine

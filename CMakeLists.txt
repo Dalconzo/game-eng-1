@@ -44,6 +44,8 @@ add_library(engine
     src/core/engine.cpp
     src/core/time_manager.cpp
     src/core/game_loop.cpp
+    src/core/debug/debug_utils.cpp
+    src/core/debug/logger.cpp
     
     src/rendering/window.cpp
     src/rendering/shader.cpp
@@ -52,6 +54,7 @@ add_library(engine
     src/rendering/texture.cpp
     src/rendering/model/model.cpp
     src/rendering/model/material.cpp
+    src/rendering/debug/gl_debug.cpp
 
     src/camera/camera.cpp
     src/camera/fps_camera.cpp
@@ -69,6 +72,7 @@ add_library(engine
     src/ecs/components/TransformComponent.cpp
     src/ecs/components/MeshRendererComponent.cpp
     src/ecs/components/CameraComponent.cpp
+    src/ecs/components/CameraControllerComponent.cpp
     src/ecs/math/Matrix4x4.cpp
 )
 target_include_directories(engine 

@@ -50,6 +50,10 @@ private:
 
 public:
     ECSManager();
+
+    static engine::rendering::Window* getWindow() {
+        return window;
+    }
     
     // Create a new entity
     Entity* createEntity();

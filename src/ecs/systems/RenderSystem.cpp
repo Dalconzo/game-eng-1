@@ -25,40 +25,98 @@ void RenderSystem::update(float deltaTime) {
 }
 
 void RenderSystem::render() {
-    // In a full implementation, we would:
-    // 1. Sort entities by material/shader for batching
-    // 2. Set up camera and view/projection matrices
-    // 3. Configure global rendering state
-    
-    std::cout << "RenderSystem rendering " << getEntities().size() << " entities" << std::endl;
-    
-    for (auto entity : getEntities()) {
-        auto& transform = entity->getComponent<TransformComponent>();
-        
-        // Get world matrix
-        Math::Matrix4x4 worldMatrix = transform.getWorldMatrix();
-        
-        // Render the entity
-        renderEntity(entity, worldMatrix);
+    // Find the main camera if we don't have one already
+    if (!m_activeCamera) {
+        m_activeCamera = findMainCamera();
     }
+    
+    // Skip rendering if no camera is available
+    if (!m_activeCamera || !m_activeCamera->hasComponent<CameraComponent>()) {
+        std::cout << "No active camera found. Skipping render." << std::endl;
+        return;
+    }
+    
+    // Get the camera component
+    auto& camera = m_activeCamera->getComponent<CameraComponent>();
+    
+    // Clear the screen
+    camera.clear();
+    
+    // Enable depth testing for proper 3D rendering
+    glEnable(GL_DEPTH_TEST);
+    
+    // Enable backface culling for performance
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    
+    // Sort entities for proper rendering order (optional)
+    // sortEntitiesByDistance();
+    
+    // Render all entities with renderers
+    for (auto entity : getEntities()) {
+        if (entity->hasComponent<TransformComponent>()) {
+            auto& transform = entity->getComponent<TransformComponent>();
+            
+            // Get world matrix
+            Math::Matrix4x4 worldMatrix = transform.getWorldMatrix();
+            
+            // Render the entity
+            renderEntity(entity, worldMatrix);
+        }
+    }
+    
+    // Disable states we enabled
+    glDisable(GL_CULL_FACE);
+    
+    // Render any post-processing effects (if any)
+    // renderPostProcessing();
 }
 
 void RenderSystem::renderEntity(Entity* entity, const Math::Matrix4x4& worldMatrix) {
-    // In a full implementation, this would connect to your graphics API
-    
-    // For the prototype, just print debug info
-    std::cout << "Rendering entity " << entity->getID() 
-              << " at position (" 
-              << worldMatrix(0, 3) << ", " 
-              << worldMatrix(1, 3) << ", " 
-              << worldMatrix(2, 3) << ")" 
-              << std::endl;
-    
-    // In an actual implementation, we would:
-    // 1. Bind entity's material and shader
-    // 2. Set shader uniforms (world matrix, etc.)
-    // 3. Bind mesh data (VAO/VBO)
-    // 4. Issue draw call (glDrawElements or equivalent)
+    // Get the mesh renderer component
+    if (!entity->hasComponent<MeshRendererComponent>()) {
+        return;
+    }
+
+    auto& renderer = entity->getComponent<MeshRendererComponent>();
+    auto model = renderer.getModel();
+    auto material = renderer.getMaterial();
+
+    // Skip rendering if no model or material is assigned
+    if (!model || !material) {
+        std::cout << "Missing model or material for entity " << entity->getID() << std::endl;
+        return;
+    }
+
+    // Use the shader and set the world matrix (model matrix)
+    m_defaultShader->use();
+    m_defaultShader->setMat4("model", worldMatrix.toGLM());
+
+    // Set view and projection matrices from the active camera
+    if (m_activeCamera && m_activeCamera->hasComponent<CameraComponent>()) {
+        auto& camera = m_activeCamera->getComponent<CameraComponent>();
+        m_defaultShader->setMat4("model", worldMatrix.toGLM());
+        m_defaultShader->setMat4("view", camera.getViewMatrix().toGLM());
+        m_defaultShader->setMat4("projection", camera.getProjectionMatrix().toGLM());
+
+        // Check for OpenGL errors after setting uniforms
+        GLenum err = glGetError();
+        if (err != GL_NO_ERROR) {
+            std::cout << "OpenGL error: " << err << " after setting uniforms" << std::endl;
+        }
+    }
+
+    // Apply the material (sets textures, colors, etc.)
+    material->apply(*m_defaultShader);
+
+    // Render the model (this will loop through meshes and draw them)
+    model->render(*m_defaultShader);
+
+    // Check for OpenGL errors after rendering
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        std::cout << "OpenGL error: " << err << " after rendering model" << std::endl;
+    }
 }
 
 Entity* RenderSystem::findMainCamera() {
@@ -71,8 +129,21 @@ Entity* RenderSystem::findMainCamera() {
     // Now we can safely use getAllEntities
     auto entities = m_ecsManager->getAllEntities();
     std::cout << "Got " << entities.size() << " entities" << std::endl;
+    
+    for (auto entity : entities) {
+        std::cout << "Checking entity " << entity->getID() << std::endl;
+        if (entity->hasComponent<CameraComponent>()) {
+            auto& camera = entity->getComponent<CameraComponent>();
+            if (camera.isMain()) {
+                std::cout << "Found main camera on entity " << entity->getID() << std::endl;
+                return entity;
+            }
+        }
+    }
+    
+    std::cout << "No main camera found" << std::endl;
+    return nullptr;
 }
-
 } // namespace ECS
 } // namespace Engine
 

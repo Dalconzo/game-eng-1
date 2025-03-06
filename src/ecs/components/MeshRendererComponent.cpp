@@ -21,30 +21,37 @@ void MeshRendererComponent::render(engine::rendering::Shader& shader) {
         return;
     }
     
-    // Get the transform component
-    if (!getOwner()->hasComponent<TransformComponent>()) {
-        std::cout << "ERROR: Entity missing TransformComponent" << std::endl;
-        return;
+    // Get the entity's transform component
+    if (getOwner()->hasComponent<TransformComponent>()) {
+        const auto& transform = getOwner()->getComponent<TransformComponent>();
+        
+        // Get the world transformation matrix
+        Math::Matrix4x4 worldMatrix = transform.getWorldMatrix();
+        
+        // Debug output to verify matrix values
+        glm::mat4 glmModel = worldMatrix.toGLM();
+        std::cout << "Model matrix for entity ID: " << getOwner()->getID() << std::endl;
+        for (int i = 0; i < 4; i++) {
+            std::cout << "  ";
+            for (int j = 0; j < 4; j++) {
+                std::cout << glmModel[j][i] << " ";
+            }
+            std::cout << std::endl;
+        }
+        
+        // Set the model matrix in the shader
+        shader.setMat4("model", glmModel);
+        
+        // Apply material if available
+        if (m_material) {
+            m_material->apply(shader);
+        } else {
+            std::cout << "WARNING: No material assigned" << std::endl;
+        }
+        
+        // Render the model
+        m_model->render(shader);
     }
-    
-    const auto& transform = getOwner()->getComponent<TransformComponent>();
-    
-    // Set the model matrix in the shader
-    std::cout << "Setting model matrix for entity ID: " << getOwner()->getID() << std::endl;
-    shader.setMat4("model", transform.getWorldMatrix().toGLM());
-    
-    // Apply material if available
-    if (m_material) {
-        std::cout << "Applying material" << std::endl;
-        m_material->apply(shader);
-    } else {
-        std::cout << "WARNING: No material assigned" << std::endl;
-    }
-    
-    // Render the model
-    std::cout << "Rendering model" << std::endl;
-    m_model->render(shader);
 }
-
 } // namespace ECS
 } // namespace Engine

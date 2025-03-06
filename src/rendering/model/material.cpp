@@ -3,12 +3,20 @@
 namespace engine {
 namespace rendering {
 
+std::shared_ptr<engine::rendering::Texture> engine::rendering::Material::m_fallbackTexture = nullptr;
+
 Material::Material()
     : m_ambient(0.2f, 0.2f, 0.2f)
     , m_diffuse(0.8f, 0.8f, 0.8f)
     , m_specular(1.0f, 1.0f, 1.0f)
     , m_shininess(32.0f)
 {
+    if (!m_fallbackTexture) {
+        // Create a simple 1x1 white texture
+        unsigned char whitePixel[4] = {255, 255, 255, 255};
+        m_fallbackTexture = std::make_shared<Texture>();
+        m_fallbackTexture->createFromData(whitePixel, 1, 1, 4);
+    }
 }
 
 void Material::apply(Shader& shader) const {

@@ -45,3 +45,5 @@ assets/large_assets/
 extern/vcpkg_installed/
 
 tests/
+
+shaders/

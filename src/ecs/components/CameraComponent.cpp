@@ -1,5 +1,6 @@
 #include "ecs/components/CameraComponent.h"
 #include "ecs/components/TransformComponent.h"
+#include "ecs/math/Matrix4x4.h"
 #include "ecs/Entity.h"
 #include <GL/glew.h>
 #include <iostream>
@@ -51,9 +52,11 @@ const Math::Matrix4x4& CameraComponent::getProjectionMatrix() const {
     
     return m_projectionMatrix;
 }
-
 const Math::Matrix4x4& CameraComponent::getViewMatrix() const {
-    std::cout << "Getting camera view matrix" << std::endl;
+    std::cout << "View matrix position: " 
+              << getOwner()->getComponent<TransformComponent>().position.x << ", "
+              << getOwner()->getComponent<TransformComponent>().position.y << ", "
+              << getOwner()->getComponent<TransformComponent>().position.z << std::endl;
 
     if (m_viewDirty) {
         std::cout << "Camera view matrix is dirty, recalculating" << std::endl;
@@ -61,63 +64,29 @@ const Math::Matrix4x4& CameraComponent::getViewMatrix() const {
         if (getOwner()->hasComponent<TransformComponent>()) {
             const auto& transform = getOwner()->getComponent<TransformComponent>();
             
-            // Get the world matrix of the camera
-            Math::Matrix4x4 worldMatrix = transform.getWorldMatrix();
-            std::cout << "Got camera world matrix" << std::endl;
+            // Get camera position
+            Math::Vector3 position = transform.getPosition();
             
-            // The view matrix is the inverse of the camera's world matrix
-            // For a simple implementation, we can use the fact that:
-            // - The inverse of a rotation matrix is its transpose
-            // - The inverse of a translation is the negative of the translation
+            // Create view matrix looking at target
+            Math::Vector3 up(0.0f, 1.0f, 0.0f);
+            m_viewMatrix = Math::Matrix4x4::createLookAt(position, m_target, up);
             
-            // Extract the rotation part (3x3 matrix)
-            Math::Matrix4x4 rotationInverse;
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
-                    rotationInverse(i, j) = worldMatrix(j, i); // Transpose
-                }
-            }
+            std::cout << "View matrix created with position: " << position.x << "," 
+                      << position.y << "," << position.z << ", looking at target" << std::endl;
             
-            // Extract the translation
-            Math::Vector3 translation(worldMatrix(0, 3), worldMatrix(1, 3), worldMatrix(2, 3));
-            
-            // Apply inverse rotation to the translation
-            Math::Vector3 translationInverse;
-            translationInverse.x = -(rotationInverse(0, 0) * translation.x + 
-                                      rotationInverse(0, 1) * translation.y + 
-                                      rotationInverse(0, 2) * translation.z);
-                                      
-            translationInverse.y = -(rotationInverse(1, 0) * translation.x + 
-                                      rotationInverse(1, 1) * translation.y + 
-                                      rotationInverse(1, 2) * translation.z);
-                                      
-            translationInverse.z = -(rotationInverse(2, 0) * translation.x + 
-                                      rotationInverse(2, 1) * translation.y + 
-                                      rotationInverse(2, 2) * translation.z);
-            
-            // Construct the view matrix
-            m_viewMatrix = rotationInverse;
-            m_viewMatrix(0, 3) = translationInverse.x;
-            m_viewMatrix(1, 3) = translationInverse.y;
-            m_viewMatrix(2, 3) = translationInverse.z;
-            
-            std::cout << "View matrix recalculation complete" << std::endl;
             m_viewDirty = false;
-        } else {
-            std::cout << "ERROR: Camera entity missing TransformComponent" << std::endl;
         }
     }
     
     return m_viewMatrix;
-}
-
-Math::Matrix4x4 CameraComponent::getViewProjectionMatrix() const {
+}Math::Matrix4x4 CameraComponent::getViewProjectionMatrix() const {
     return getProjectionMatrix() * getViewMatrix();
 }
 
 void CameraComponent::clear() const {
     // Clear the framebuffer with the camera's clear color
-    glClearColor(m_clearColor.x, m_clearColor.y, m_clearColor.z, 1.0f);
+    // glClearColor(m_clearColor.x, m_clearColor.y, m_clearColor.z, 1.0f);
+    glClearColor(0.2f, 0.4f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 

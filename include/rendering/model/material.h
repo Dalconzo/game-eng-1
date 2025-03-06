@@ -48,6 +48,8 @@ private:
     glm::vec3 m_diffuse;
     glm::vec3 m_specular;
     float m_shininess;
+
+    static std::shared_ptr<Texture> m_fallbackTexture;
 };
 
 } // namespace rendering

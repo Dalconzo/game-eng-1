@@ -28,7 +28,7 @@ private:
     
     // Cached matrices
     mutable bool m_projectionDirty = true;
-    mutable bool m_viewDirty = true;
+    
     mutable Math::Matrix4x4 m_projectionMatrix;
     mutable Math::Matrix4x4 m_viewMatrix;
     
@@ -36,9 +36,13 @@ private:
     Math::Vector3 m_clearColor = {0.2f, 0.3f, 0.3f};
     bool m_isMain = false;
 
+    // Add this to the private section of CameraComponent class
+    friend class OrbitCameraController;
+    Math::Vector3 m_target = Math::Vector3(0, 0, 0);
+
 public:
     CameraComponent() = default;
-    
+    mutable bool m_viewDirty = true;
     // Setters for camera properties
     void setPerspective(float fov, float aspectRatio, float nearPlane, float farPlane) {
         m_projectionType = ProjectionType::Perspective;

@@ -31,6 +31,10 @@ void Window::init() {
     if (!glfwInit()) {
         throw std::runtime_error("Failed to initialize GLFW");
     }
+
+#ifdef DEBUG
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+#endif
     
     // Set OpenGL version and profile
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -59,6 +63,11 @@ void Window::init() {
     
     // Enable VSync
     glfwSwapInterval(1);
+
+#ifdef DEBUG
+    engine::rendering::debug::setupGLDebugContext();
+#endif
+
 }
 
 void Window::swapBuffers() {

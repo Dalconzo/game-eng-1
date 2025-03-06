@@ -204,7 +204,7 @@ bool Model::loadOBJ(const std::string& filePath) {
         loadMaterials(mtlPath.string());
     }
     
-    std::cout << "Loaded model with " << m_meshes.size() << " meshes" << std::endl;
+    std::cout << "Loaded " << vertices.size() << " vertices, " << indices.size() << " indices" << std::endl;
     return !m_meshes.empty();
 }
 

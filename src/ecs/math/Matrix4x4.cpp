@@ -94,13 +94,52 @@ Matrix4x4 Matrix4x4::identity() {
 }
 
 glm::mat4 Matrix4x4::toGLM() const {
+    // GLM constructor takes elements in column-major order
+    // For a column-major stored matrix, we need to ensure correct element mapping
     return glm::mat4(
-        data[0], data[1], data[2], data[3],
-        data[4], data[5], data[6], data[7],
-        data[8], data[9], data[10], data[11],
-        data[12], data[13], data[14], data[15]
+        data[0], data[4], data[8], data[12],  // First column
+        data[1], data[5], data[9], data[13],  // Second column
+        data[2], data[6], data[10], data[14], // Third column
+        data[3], data[7], data[11], data[15]  // Fourth column
     );
 }
+
+Matrix4x4 Matrix4x4::createLookAt(const Vector3& eye, const Vector3& target, const Vector3& up) {
+    // Create the three basis vectors for the camera coordinate system
+    Vector3 zaxis = (eye - target).normalized(); // Forward direction (camera looks down -z)
+    Vector3 xaxis = up.cross(zaxis).normalized(); // Right direction
+    Vector3 yaxis = zaxis.cross(xaxis); // Recalculated up direction
+    
+    // Create view matrix directly
+    Matrix4x4 result;
+    
+    // First row - right vector
+    result(0, 0) = xaxis.x;
+    result(0, 1) = xaxis.y;
+    result(0, 2) = xaxis.z;
+    result(0, 3) = -xaxis.dot(eye);
+    
+    // Second row - up vector
+    result(1, 0) = yaxis.x;
+    result(1, 1) = yaxis.y;
+    result(1, 2) = yaxis.z;
+    result(1, 3) = -yaxis.dot(eye);
+    
+    // Third row - forward vector
+    result(2, 0) = zaxis.x;
+    result(2, 1) = zaxis.y;
+    result(2, 2) = zaxis.z;
+    result(2, 3) = -zaxis.dot(eye);
+    
+    // Fourth row - homogeneous coordinates
+    result(3, 0) = 0.0f;
+    result(3, 1) = 0.0f;
+    result(3, 2) = 0.0f;
+    result(3, 3) = 1.0f;
+    
+    return result;
+}
+
 
 } // namespace Math
 } // namespace Engine

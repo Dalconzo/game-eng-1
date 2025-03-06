@@ -67,5 +67,7 @@ void Texture::bind(unsigned int textureUnit) const {
     glBindTexture(GL_TEXTURE_2D, m_textureID);
 }
 
+
+
 } // namespace rendering
 } // namespace engine
